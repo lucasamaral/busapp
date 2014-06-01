@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">BusApp</string>
+    <string name="title_section1">Buscar Ônibus</string>
+    <string name="title_section2">Buscar Paradas</string>
+    <string name="edit_message">Digite:</string>
+    <string name="button_send">Enviar</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+
+</resources>
