@@ -13,20 +13,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <EditText android:id="@+id/edit_message"
-        android:layout_width="wrap_content"
+    <SearchView
+        android:id="@+id/searchView"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/edit_message"
-        android:layout_alignBottom="@+id/button"
-        android:layout_toLeftOf="@+id/button"
+        android:queryHint="@string/search_bus_hint"
+        android:iconifiedByDefault="false"
+        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true" />
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/button_send"
-        android:id="@+id/button"
-        android:layout_below="@+id/section_label"
-        android:layout_alignParentRight="true" />
+
 
 
 </RelativeLayout>
