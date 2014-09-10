@@ -113,13 +113,15 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                     return new SearchBusFragment();
                 case 1:
                     return new SearchStopFragment();
+                case 2:
+                    return new TrackUserFragment();
             }
             return null;
         }
 
         @Override
         public int getCount() {
-            return 2;
+            return 3;
         }
 
         @Override
@@ -130,6 +132,8 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                     return getString(R.string.title_section1).toUpperCase(l);
                 case 1:
                     return getString(R.string.title_section2).toUpperCase(l);
+                case 2:
+                    return getString(R.string.title_section3).toUpperCase(l);
             }
             return null;
         }
