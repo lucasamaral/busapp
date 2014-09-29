@@ -2,11 +2,22 @@
 <resources>
 
     <string name="app_name">BusApp</string>
-    <string name="title_section1">Buscar Ônibus</string>
-    <string name="title_section2">Buscar Paradas</string>
-    <string name="title_section3">Rastrear Usuário</string>
+    <string name="title_section1">Buscar\nÔnibus</string>
+    <string name="title_section2">Buscar\nParadas</string>
+    <string name="title_section3">Rastrear\nUsuário</string>
     <string name="search_bus_hint">Digite o nº da linha&#8230;</string>
     <string name="search_stop_hint">Digite o nome da parada&#8230;</string>
     <string name="action_settings">Configurações</string>
+    <string name="show_map_string">Onde estou?</string>
+
+    <!-- Latitude, longitude format -->
+    <string name="latitude_longitude">%1$.8f, %2$.8f</string>
+
+    <string name="resolved">Error resolved. Please re-try operation.</string>
+    <string name="no_resolution">Google Play services: unable to resolve connection error.</string>
+
+    <string name="unknown_activity_request_code">
+        Received an unknown activity request code %1$d in onActivityResult.
+    </string>
 
 </resources>
