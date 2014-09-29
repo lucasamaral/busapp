@@ -9,7 +9,9 @@ import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 
-public class TrackUserFragment extends Fragment {
+public class TrackUserFragment extends Fragment {// implements
+//        GooglePlayServicesClient.ConnectionCallbacks,
+//        GooglePlayServicesClient.OnConnectionFailedListener{
 
     protected String[] buses = {"8102", "82", "8150"};
 
@@ -22,4 +24,6 @@ public class TrackUserFragment extends Fragment {
         busList.setAdapter(adapter);
         return rootView;
     }
+
+
 }
