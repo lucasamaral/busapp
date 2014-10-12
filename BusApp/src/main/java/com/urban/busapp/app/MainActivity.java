@@ -102,8 +102,11 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
+        FragmentManager fm;
+
         public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
+            this.fm = fm;
         }
 
         @Override
@@ -114,7 +117,9 @@ public class MainActivity extends Activity implements ActionBar.TabListener {
                 case 1:
                     return new SearchStopFragment();
                 case 2:
-                    return new TrackUserFragment();
+                    TrackUserFragment trackFrag = new TrackUserFragment();
+                    trackFrag.setFm(fm);
+                    return trackFrag;
             }
             return null;
         }

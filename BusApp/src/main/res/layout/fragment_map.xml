@@ -35,4 +35,11 @@
         android:layout_below="@id/label_lat_lng"
         android:text="@string/show_map_string" />
 
+    <fragment
+        android:id="@+id/locationMap"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_below="@id/mapButton"
+        class="com.google.android.gms.maps.MapFragment" />
+
 </RelativeLayout>

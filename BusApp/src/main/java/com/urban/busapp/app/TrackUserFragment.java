@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Location;
@@ -20,23 +21,63 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesClient;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.location.LocationClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+
 
 public class TrackUserFragment extends Fragment implements
-        GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener{
+        GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener,
+        LocationListener {
 
     private final static int
             CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
+
+    // Milliseconds per second
+    private static final int MILLISECONDS_PER_SECOND = 1000;
+    // Update frequency in seconds
+    public static final int UPDATE_INTERVAL_IN_SECONDS = 2;
+    // Update frequency in milliseconds
+    private static final long UPDATE_INTERVAL =
+            MILLISECONDS_PER_SECOND * UPDATE_INTERVAL_IN_SECONDS;
+    // The fastest update frequency, in seconds
+    private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
+    // A fast frequency ceiling in milliseconds
+    private static final long FASTEST_INTERVAL =
+            MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
+
+    private FragmentManager fm;
+
     private LocationClient mLocationClient;
+    private LocationRequest mLocationRequest;
+
 
     Location mCurrentLocation;
 
     private TextView mLatLng;
     private Button locationButton;
+    private GoogleMap mMap;
 
+    public void setFm(FragmentManager fm) {
+        this.fm = fm;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mLocationRequest = LocationRequest.create();
+        // Use high accuracy
+        mLocationRequest.setPriority(
+                LocationRequest.PRIORITY_HIGH_ACCURACY);
+        // Set the update interval to 5 seconds
+        mLocationRequest.setInterval(UPDATE_INTERVAL);
+        // Set the fastest update interval to 1 second
+        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+
         mLocationClient = new LocationClient(this.getActivity(), this, this);
     }
 
@@ -48,6 +89,9 @@ public class TrackUserFragment extends Fragment implements
 
     @Override
     public void onStop() {
+        if (servicesConnected()) {
+            stopPeriodicUpdates();
+        }
         mLocationClient.disconnect();
         super.onStop();
     }
@@ -58,12 +102,46 @@ public class TrackUserFragment extends Fragment implements
         locationButton = (Button) rootView.findViewById(R.id.mapButton);
         locationButton.setOnClickListener(new OnClickGetLocation(this.getActivity()));
         mLatLng = (TextView) rootView.findViewById(R.id.lat_lng);
+        setUpMapIfNeeded();
         return rootView;
+    }
+
+    public void setUpMapIfNeeded() {
+        if (mMap == null) {
+            mMap = ((MapFragment) fm.findFragmentById(R.id.locationMap)).getMap();
+            if (mMap == null) {
+                Toast.makeText(this.getActivity(),
+                        "Sorry! unable to create maps", Toast.LENGTH_SHORT)
+                        .show();
+            }
+        }
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        String msg = "Updated Location: " +
+                Double.toString(location.getLatitude()) + "," +
+                Double.toString(location.getLongitude());
+        if(mCurrentLocation != null && mMap != null){
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mCurrentLocation.getLatitude(),
+                    mCurrentLocation.getLongitude()), 12.0f));
+        }
+        Toast.makeText(this.getActivity(), msg, Toast.LENGTH_SHORT).show();
+    }
+
+    private void startPeriodicUpdates() {
+
+        mLocationClient.requestLocationUpdates(mLocationRequest, this);
+    }
+
+    private void stopPeriodicUpdates() {
+        mLocationClient.removeLocationUpdates(this);
     }
 
     @Override
     public void onConnected(Bundle bundle) {
         Toast.makeText(this.getActivity(), "Connected", Toast.LENGTH_SHORT).show();
+        startPeriodicUpdates();
     }
 
     @Override
@@ -141,19 +219,12 @@ public class TrackUserFragment extends Fragment implements
                         // Log the result
                         Log.d(LocationUtils.APPTAG, getString(R.string.resolved));
 
-                        // Display the result
-//                        mConnectionState.setText(R.string.connected);
-//                        mConnectionStatus.setText(R.string.resolved);
                         break;
 
                     // If any other result was returned by Google Play services
                     default:
                         // Log the result
                         Log.d(LocationUtils.APPTAG, getString(R.string.no_resolution));
-
-                        // Display the result
-//                        mConnectionState.setText(R.string.disconnected);
-//                        mConnectionStatus.setText(R.string.no_resolution);
 
                         break;
                 }
@@ -239,6 +310,7 @@ public class TrackUserFragment extends Fragment implements
 
                 // Get the current location
                 Location currentLocation = mLocationClient.getLastLocation();
+                mCurrentLocation = currentLocation;
 
                 // Display the current location in the UI
                 mLatLng.setText(LocationUtils.getLatLng(trackFragActivity, currentLocation));
