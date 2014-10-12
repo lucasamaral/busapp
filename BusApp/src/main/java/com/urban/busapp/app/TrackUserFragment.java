@@ -30,7 +30,7 @@ public class TrackUserFragment extends Fragment implements
 
     Location mCurrentLocation;
 
-//    private TextView mLatLng;
+    private TextView mLatLng;
     private Button locationButton;
 
 
@@ -57,6 +57,7 @@ public class TrackUserFragment extends Fragment implements
         View rootView = inflater.inflate(R.layout.fragment_map, container, false);
         locationButton = (Button) rootView.findViewById(R.id.mapButton);
         locationButton.setOnClickListener(new OnClickGetLocation(this.getActivity()));
+        mLatLng = (TextView) rootView.findViewById(R.id.lat_lng);
         return rootView;
     }
 
@@ -233,7 +234,6 @@ public class TrackUserFragment extends Fragment implements
 
         @Override
         public void onClick(View v) {
-            System.out.print(">>>>>>>aquii");
             // If Google Play Services is available
             if (servicesConnected()) {
 
@@ -241,9 +241,9 @@ public class TrackUserFragment extends Fragment implements
                 Location currentLocation = mLocationClient.getLastLocation();
 
                 // Display the current location in the UI
-//                mLatLng.setText(LocationUtils.getLatLng(trackFragActivity, currentLocation));
+                mLatLng.setText(LocationUtils.getLatLng(trackFragActivity, currentLocation));
                 Toast.makeText(trackFragActivity, LocationUtils.getLatLng(trackFragActivity, currentLocation),
-                        Toast.LENGTH_LONG).show();
+                        Toast.LENGTH_SHORT).show();
             }
         }
     }

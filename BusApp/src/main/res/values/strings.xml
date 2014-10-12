@@ -12,6 +12,7 @@
 
     <!-- Latitude, longitude format -->
     <string name="latitude_longitude">%1$.8f, %2$.8f</string>
+    <string name="latlng">Lat/Lon</string>
 
     <string name="resolved">Error resolved. Please re-try operation.</string>
     <string name="no_resolution">Google Play services: unable to resolve connection error.</string>
