@@ -130,7 +130,6 @@ public class TrackUserFragment extends Fragment implements
     }
 
     private void startPeriodicUpdates() {
-
         mLocationClient.requestLocationUpdates(mLocationRequest, this);
     }
 
