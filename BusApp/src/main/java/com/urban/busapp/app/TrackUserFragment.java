@@ -27,6 +27,13 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class TrackUserFragment extends Fragment implements
@@ -54,12 +61,16 @@ public class TrackUserFragment extends Fragment implements
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
 
-
-    Location mCurrentLocation;
+    private Location mCurrentLocation;
+    private Marker now;
+    private GoogleMap mMap;
+    private List<LatLng> pointsPath;
+    private Polyline polyline;
 
     private TextView mLatLng;
     private Button locationButton;
-    private GoogleMap mMap;
+    private Button startButton;
+    private Button stopButton;
 
     public void setFm(FragmentManager fm) {
         this.fm = fm;
@@ -79,6 +90,8 @@ public class TrackUserFragment extends Fragment implements
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         mLocationClient = new LocationClient(this.getActivity(), this, this);
+
+        pointsPath = new ArrayList<LatLng>();
     }
 
     @Override
@@ -101,6 +114,10 @@ public class TrackUserFragment extends Fragment implements
         View rootView = inflater.inflate(R.layout.fragment_map, container, false);
         locationButton = (Button) rootView.findViewById(R.id.mapButton);
         locationButton.setOnClickListener(new OnClickGetLocation(this.getActivity()));
+        startButton = (Button) rootView.findViewById(R.id.startTrack);
+        startButton.setOnClickListener(new OnClickStartTracking());
+        stopButton = (Button) rootView.findViewById(R.id.stopTrack);
+        stopButton.setOnClickListener(new OnClickStopTracking());
         mLatLng = (TextView) rootView.findViewById(R.id.lat_lng);
         setUpMapIfNeeded();
         return rootView;
@@ -113,20 +130,28 @@ public class TrackUserFragment extends Fragment implements
                 Toast.makeText(this.getActivity(),
                         "Sorry! unable to create maps", Toast.LENGTH_SHORT)
                         .show();
+            } else {
+                PolylineOptions lineOptions = new PolylineOptions();
+                polyline = mMap.addPolyline(lineOptions);
             }
         }
     }
 
     @Override
     public void onLocationChanged(Location location) {
-        String msg = "Updated Location: " +
-                Double.toString(location.getLatitude()) + "," +
-                Double.toString(location.getLongitude());
+        if(now != null)
+            now.remove();
+
+        mCurrentLocation = location;
         if(mCurrentLocation != null && mMap != null){
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mCurrentLocation.getLatitude(),
-                    mCurrentLocation.getLongitude()), 12.0f));
+            LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
+            pointsPath.add(latLng);
+            polyline.setPoints(pointsPath);
+
+            now = mMap.addMarker(new MarkerOptions().position(latLng));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
         }
-        Toast.makeText(this.getActivity(), msg, Toast.LENGTH_SHORT).show();
     }
 
     private void startPeriodicUpdates() {
@@ -140,7 +165,6 @@ public class TrackUserFragment extends Fragment implements
     @Override
     public void onConnected(Bundle bundle) {
         Toast.makeText(this.getActivity(), "Connected", Toast.LENGTH_SHORT).show();
-        startPeriodicUpdates();
     }
 
     @Override
@@ -315,6 +339,32 @@ public class TrackUserFragment extends Fragment implements
                 mLatLng.setText(LocationUtils.getLatLng(trackFragActivity, currentLocation));
                 Toast.makeText(trackFragActivity, LocationUtils.getLatLng(trackFragActivity, currentLocation),
                         Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+    public class OnClickStartTracking implements View.OnClickListener {
+
+//        private final Activity trackFragActivity;
+//
+//        public OnClickStartTracking(Activity activity) { trackFragActivity = activity; }
+
+        @Override
+        public void onClick(View v) {
+            startPeriodicUpdates();
+        }
+    }
+    public class OnClickStopTracking implements View.OnClickListener {
+
+//        private final Activity trackFragActivity;
+//
+//        public OnClickStopTracking(Activity activity) {
+//            trackFragActivity = activity;
+//        }
+
+        @Override
+        public void onClick(View v) {
+            if (servicesConnected()) {
+                stopPeriodicUpdates();
             }
         }
     }
