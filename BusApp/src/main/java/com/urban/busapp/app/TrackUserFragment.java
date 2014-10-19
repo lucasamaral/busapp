@@ -7,6 +7,7 @@ import android.app.Fragment;
 import android.app.FragmentManager;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
@@ -131,7 +132,9 @@ public class TrackUserFragment extends Fragment implements
                         "Sorry! unable to create maps", Toast.LENGTH_SHORT)
                         .show();
             } else {
-                PolylineOptions lineOptions = new PolylineOptions();
+                mMap.setMyLocationEnabled(true);
+                PolylineOptions lineOptions = new PolylineOptions()
+                        .color(0xE60071C5);
                 polyline = mMap.addPolyline(lineOptions);
             }
         }
@@ -139,8 +142,11 @@ public class TrackUserFragment extends Fragment implements
 
     @Override
     public void onLocationChanged(Location location) {
+        boolean firstTime = false;
         if(now != null)
             now.remove();
+        else
+            firstTime = true;
 
         mCurrentLocation = location;
         if(mCurrentLocation != null && mMap != null){
@@ -148,9 +154,11 @@ public class TrackUserFragment extends Fragment implements
             pointsPath.add(latLng);
             polyline.setPoints(pointsPath);
 
-            now = mMap.addMarker(new MarkerOptions().position(latLng));
+            now = mMap.addMarker(new MarkerOptions().position(latLng).visible(false));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-            mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+            if(firstTime){
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+            }
         }
     }
 
