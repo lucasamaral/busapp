@@ -350,25 +350,15 @@ public class TrackUserFragment extends Fragment implements
             }
         }
     }
+
     public class OnClickStartTracking implements View.OnClickListener {
-
-//        private final Activity trackFragActivity;
-//
-//        public OnClickStartTracking(Activity activity) { trackFragActivity = activity; }
-
         @Override
         public void onClick(View v) {
             startPeriodicUpdates();
         }
     }
+
     public class OnClickStopTracking implements View.OnClickListener {
-
-//        private final Activity trackFragActivity;
-//
-//        public OnClickStopTracking(Activity activity) {
-//            trackFragActivity = activity;
-//        }
-
         @Override
         public void onClick(View v) {
             if (servicesConnected()) {
