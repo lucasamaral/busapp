@@ -5,10 +5,13 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
-import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -33,8 +36,24 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 
 public class TrackUserFragment extends Fragment implements
@@ -168,6 +187,82 @@ public class TrackUserFragment extends Fragment implements
 
     private void stopPeriodicUpdates() {
         mLocationClient.removeLocationUpdates(this);
+    }
+
+    private void sendPointsToServer(){
+        Geocoder geocoder;
+        geocoder = new Geocoder(this.getActivity(), Locale.getDefault());
+
+        String from_address = "";
+        String from_name="";
+        String to_address = "";
+        String to_name="";
+        try {
+            List<Address> address_from;
+            address_from = geocoder.getFromLocation(
+                    pointsPath.get(0).latitude, pointsPath.get(0).longitude, 1);
+            String address = address_from.get(0).getAddressLine(0);
+            String city = address_from.get(0).getAddressLine(1);
+            String country = address_from.get(0).getAddressLine(2);
+            from_address = address + ", " + city + " - " + country;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            List<Address> address_to;
+            address_to = geocoder.getFromLocation(
+                    pointsPath.get(pointsPath.size()-1).latitude, pointsPath.get(0).longitude, 1);
+            String address = address_to.get(0).getAddressLine(0);
+            String city = address_to.get(0).getAddressLine(1);
+            String country = address_to.get(0).getAddressLine(2);
+            to_address = address + ", " + city + " - " + country;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        JSONObject jsonPoints = new JSONObject();
+        try {
+            JSONObject stop1 = new JSONObject();
+            stop1.put("address", from_address);
+            stop1.put("name", "");
+            jsonPoints.put("first_stop", stop1);
+
+            JSONObject stop2 = new JSONObject();
+            stop2.put("address", to_address);
+            stop2.put("name", "");
+            jsonPoints.put("second_stop", stop2);
+
+            jsonPoints.put("points", buildArrayPoints());
+
+            jsonPoints.put("time_estimation", "666");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        String json = jsonPoints.toString();
+        HttpAsyncTask task = new HttpAsyncTask(this.getActivity(), json);
+        String url = "https://bus-estimates.herokuapp.com/busapp/createsegment/";
+        task.execute(url);
+    }
+
+    private JSONArray buildArrayPoints(){
+        JSONArray points = new JSONArray();
+        for(LatLng pt : pointsPath){
+            try {
+                JSONObject point = new JSONObject();
+
+                NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
+                DecimalFormat df = (DecimalFormat)nf;
+                df.setMaximumFractionDigits(6);
+
+                point.put("lat", df.format(pt.latitude));
+                point.put("lon", df.format(pt.longitude));
+                points.put(point);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return points;
     }
 
     @Override
@@ -306,6 +401,62 @@ public class TrackUserFragment extends Fragment implements
         }
     }
 
+    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
+
+        private Context context;
+        private String toSend;
+
+        public HttpAsyncTask(Context context, String toSend) {
+            this.context = context;
+            this.toSend = toSend;
+        }
+
+        @Override
+        protected String doInBackground(String... urls) {
+            return postJson(urls[0], toSend);
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Toast.makeText(context, "Data Sent!", Toast.LENGTH_LONG).show();
+        }
+
+        public String postJson(String url, String json){
+            InputStream inputStream = null;
+            String result = "";
+            try {
+                HttpClient httpclient = new DefaultHttpClient();
+                HttpPost httpPost = new HttpPost(url);
+
+                StringEntity se = new StringEntity(json);
+
+                httpPost.setEntity(se);
+                httpPost.setHeader("Accept", "application/json");
+                httpPost.setHeader("Content-type", "application/json");
+                HttpResponse httpResponse = httpclient.execute(httpPost);
+                inputStream = httpResponse.getEntity().getContent();
+                if(inputStream != null)
+                    result = convertInputStreamToString(inputStream);
+                else
+                    result = "Did not work!";
+
+            } catch (Exception e) {
+                Log.d("InputStream", e.getLocalizedMessage());
+            }
+            return result;
+        }
+
+        private String convertInputStreamToString(InputStream inputStream) throws IOException{
+            BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
+            String line;
+            String result = "";
+            while((line = bufferedReader.readLine()) != null)
+                result += line;
+            inputStream.close();
+            return result;
+        }
+    }
+
 
     public static class ErrorDialogFragment extends DialogFragment {
         // Global field to contain the error dialog
@@ -363,6 +514,7 @@ public class TrackUserFragment extends Fragment implements
         public void onClick(View v) {
             if (servicesConnected()) {
                 stopPeriodicUpdates();
+                sendPointsToServer();
             }
         }
     }
