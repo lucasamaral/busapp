@@ -5,13 +5,11 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentManager;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,19 +34,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -63,16 +53,12 @@ public class TrackUserFragment extends Fragment implements
     private final static int
             CONNECTION_FAILURE_RESOLUTION_REQUEST = 9000;
 
-    // Milliseconds per second
     private static final int MILLISECONDS_PER_SECOND = 1000;
-    // Update frequency in seconds
+    private static final long NANOSECONDS_PER_SECOND = 1000000000;
     public static final int UPDATE_INTERVAL_IN_SECONDS = 2;
-    // Update frequency in milliseconds
     private static final long UPDATE_INTERVAL =
             MILLISECONDS_PER_SECOND * UPDATE_INTERVAL_IN_SECONDS;
-    // The fastest update frequency, in seconds
     private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
-    // A fast frequency ceiling in milliseconds
     private static final long FASTEST_INTERVAL =
             MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
 
@@ -91,6 +77,8 @@ public class TrackUserFragment extends Fragment implements
     private Button locationButton;
     private Button startButton;
     private Button stopButton;
+    private Long startTime;
+    private Long timeDiff;
 
     public void setFm(FragmentManager fm) {
         this.fm = fm;
@@ -182,10 +170,12 @@ public class TrackUserFragment extends Fragment implements
     }
 
     private void startPeriodicUpdates() {
+        startTime = System.nanoTime();
         mLocationClient.requestLocationUpdates(mLocationRequest, this);
     }
 
     private void stopPeriodicUpdates() {
+        timeDiff = System.nanoTime() - startTime;
         mLocationClient.removeLocationUpdates(this);
     }
 
@@ -235,7 +225,8 @@ public class TrackUserFragment extends Fragment implements
 
             jsonPoints.put("points", buildArrayPoints());
 
-            jsonPoints.put("time_estimation", "666");
+            Long timeSeconds = timeDiff/NANOSECONDS_PER_SECOND;
+            jsonPoints.put("time_estimation", timeSeconds.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -400,63 +391,6 @@ public class TrackUserFragment extends Fragment implements
             return false;
         }
     }
-
-    private class HttpAsyncTask extends AsyncTask<String, Void, String> {
-
-        private Context context;
-        private String toSend;
-
-        public HttpAsyncTask(Context context, String toSend) {
-            this.context = context;
-            this.toSend = toSend;
-        }
-
-        @Override
-        protected String doInBackground(String... urls) {
-            return postJson(urls[0], toSend);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            Toast.makeText(context, "Data Sent!", Toast.LENGTH_LONG).show();
-        }
-
-        public String postJson(String url, String json){
-            InputStream inputStream = null;
-            String result = "";
-            try {
-                HttpClient httpclient = new DefaultHttpClient();
-                HttpPost httpPost = new HttpPost(url);
-
-                StringEntity se = new StringEntity(json);
-
-                httpPost.setEntity(se);
-                httpPost.setHeader("Accept", "application/json");
-                httpPost.setHeader("Content-type", "application/json");
-                HttpResponse httpResponse = httpclient.execute(httpPost);
-                inputStream = httpResponse.getEntity().getContent();
-                if(inputStream != null)
-                    result = convertInputStreamToString(inputStream);
-                else
-                    result = "Did not work!";
-
-            } catch (Exception e) {
-                Log.d("InputStream", e.getLocalizedMessage());
-            }
-            return result;
-        }
-
-        private String convertInputStreamToString(InputStream inputStream) throws IOException{
-            BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-            String line;
-            String result = "";
-            while((line = bufferedReader.readLine()) != null)
-                result += line;
-            inputStream.close();
-            return result;
-        }
-    }
-
 
     public static class ErrorDialogFragment extends DialogFragment {
         // Global field to contain the error dialog
