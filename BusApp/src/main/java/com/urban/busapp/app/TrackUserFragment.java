@@ -183,30 +183,30 @@ public class TrackUserFragment extends Fragment implements
         Geocoder geocoder;
         geocoder = new Geocoder(this.getActivity(), Locale.getDefault());
 
-        String from_address = "";
-        String from_name="";
-        String to_address = "";
-        String to_name="";
+        String fromAddress = "";
+        String fromName="";
+        String toAddress = "";
+        String toName="";
         try {
-            List<Address> address_from;
-            address_from = geocoder.getFromLocation(
+            List<Address> addressFrom;
+            addressFrom = geocoder.getFromLocation(
                     pointsPath.get(0).latitude, pointsPath.get(0).longitude, 1);
-            String address = address_from.get(0).getAddressLine(0);
-            String city = address_from.get(0).getAddressLine(1);
-            String country = address_from.get(0).getAddressLine(2);
-            from_address = address + ", " + city + " - " + country;
+            String address = addressFrom.get(0).getAddressLine(0);
+            String city = addressFrom.get(0).getAddressLine(1);
+            String country = addressFrom.get(0).getAddressLine(2);
+            fromAddress = address + ", " + city + " - " + country;
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         try {
-            List<Address> address_to;
-            address_to = geocoder.getFromLocation(
+            List<Address> addressTo;
+            addressTo = geocoder.getFromLocation(
                     pointsPath.get(pointsPath.size()-1).latitude, pointsPath.get(0).longitude, 1);
-            String address = address_to.get(0).getAddressLine(0);
-            String city = address_to.get(0).getAddressLine(1);
-            String country = address_to.get(0).getAddressLine(2);
-            to_address = address + ", " + city + " - " + country;
+            String address = addressTo.get(0).getAddressLine(0);
+            String city = addressTo.get(0).getAddressLine(1);
+            String country = addressTo.get(0).getAddressLine(2);
+            toAddress = address + ", " + city + " - " + country;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -214,13 +214,13 @@ public class TrackUserFragment extends Fragment implements
         JSONObject jsonPoints = new JSONObject();
         try {
             JSONObject stop1 = new JSONObject();
-            stop1.put("address", from_address);
-            stop1.put("name", "");
+            stop1.put("address", fromAddress);
+            stop1.put("name", fromName);
             jsonPoints.put("first_stop", stop1);
 
             JSONObject stop2 = new JSONObject();
-            stop2.put("address", to_address);
-            stop2.put("name", "");
+            stop2.put("address", toAddress);
+            stop2.put("name", toName);
             jsonPoints.put("second_stop", stop2);
 
             jsonPoints.put("points", buildArrayPoints());
