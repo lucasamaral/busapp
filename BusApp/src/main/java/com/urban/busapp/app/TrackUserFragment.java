@@ -226,7 +226,7 @@ public class TrackUserFragment extends Fragment implements
             jsonPoints.put("points", buildArrayPoints());
 
             Long timeSeconds = timeDiff/NANOSECONDS_PER_SECOND;
-            jsonPoints.put("time_estimation", timeSeconds.toString());
+            jsonPoints.put("time_measured", timeSeconds.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
