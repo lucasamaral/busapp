@@ -15,7 +15,6 @@ import java.util.ArrayList;
 
 public class SearchBusFragment extends Fragment {
 
-    protected ArrayList<String> buses = new ArrayList<String>();
     protected  ArrayList<BusLine> allLines;
     private ArrayAdapter<String> adapter;
 
@@ -35,7 +34,6 @@ public class SearchBusFragment extends Fragment {
     public void setBusLineNames(ArrayList<BusLine> lines){
         allLines = lines;
         for(BusLine line : allLines){
-            buses.add(line.lineInfo());
             adapter.insert(line.lineInfo(),adapter.getCount());
         }
         adapter.notifyDataSetChanged();
