@@ -33,6 +33,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.urban.busapp.app.tasks.HttpPostAsyncTask;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -175,7 +176,8 @@ public class TrackUserFragment extends Fragment implements
     }
 
     private void stopPeriodicUpdates() {
-        timeDiff = System.nanoTime() - startTime;
+        if(startTime != null)
+            timeDiff = System.nanoTime() - startTime;
         mLocationClient.removeLocationUpdates(this);
     }
 
@@ -231,7 +233,7 @@ public class TrackUserFragment extends Fragment implements
             e.printStackTrace();
         }
         String json = jsonPoints.toString();
-        HttpAsyncTask task = new HttpAsyncTask(this.getActivity(), json);
+        HttpPostAsyncTask task = new HttpPostAsyncTask(this.getActivity(), json);
         String url = "https://bus-estimates.herokuapp.com/busapp/createsegment/";
         task.execute(url);
     }

@@ -1,4 +1,4 @@
-package com.urban.busapp.app;
+package com.urban.busapp.app.tasks;
 
 import android.content.Context;
 import android.os.AsyncTask;
@@ -16,12 +16,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-public class HttpAsyncTask extends AsyncTask<String, Void, String> {
+public class HttpPostAsyncTask extends AsyncTask<String, Void, String> {
 
     private Context context;
     private String toSend;
 
-    public HttpAsyncTask(Context context, String toSend) {
+    public HttpPostAsyncTask(Context context, String toSend) {
         this.context = context;
         this.toSend = toSend;
     }
@@ -51,7 +51,7 @@ public class HttpAsyncTask extends AsyncTask<String, Void, String> {
             HttpResponse httpResponse = httpclient.execute(httpPost);
             inputStream = httpResponse.getEntity().getContent();
             if(inputStream != null)
-                result = convertInputStreamToString(inputStream);
+                result = TaskUtils.convertStreamToString(inputStream);
             else
                 result = "Did not work!";
 
@@ -61,13 +61,4 @@ public class HttpAsyncTask extends AsyncTask<String, Void, String> {
         return result;
     }
 
-    private String convertInputStreamToString(InputStream inputStream) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader(inputStream));
-        String line;
-        String result = "";
-        while((line = bufferedReader.readLine()) != null)
-            result += line;
-        inputStream.close();
-        return result;
-    }
 }
