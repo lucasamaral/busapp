@@ -51,7 +51,7 @@ public class BusLinesAsyncTask  extends AsyncTask<String, Void, ArrayList<BusLin
                 InputStream inStream = entity.getContent();
                 resultString = TaskUtils.convertStreamToString(inStream);
                 JSONArray jsonRet = new JSONArray(resultString);
-                busLines = readBusLines(jsonRet);
+                busLines = BusLine.fromJsonArray(jsonRet);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -61,18 +61,4 @@ public class BusLinesAsyncTask  extends AsyncTask<String, Void, ArrayList<BusLin
         return busLines;
     }
 
-    public ArrayList<BusLine> readBusLines(JSONArray jsonRet) {
-        ArrayList<BusLine> allLines = new ArrayList<BusLine>();
-        for (int i = 0; i < jsonRet.length(); i++) {
-            try {
-                JSONObject obj = jsonRet.getJSONObject(i);
-                BusLine line = new BusLine(obj.getString("number"),obj.getString("name"),
-                        obj.getString("start_segment"),obj.getString("end_segment"));
-                allLines.add(line);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        return allLines;
-    }
 }

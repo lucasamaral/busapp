@@ -1,7 +1,13 @@
 package com.urban.busapp.app.models;
 
 
-public class BusLine {
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+
+public class BusLine{
     private String number;
     private String name;
     private String start;
@@ -13,6 +19,30 @@ public class BusLine {
         this.name = name;
         this.start = start;
         this.end = end;
+    }
+
+    public static BusLine fromJson(JSONObject obj){
+        try {
+             return new BusLine(obj.getString("number"),obj.getString("name"),
+                    obj.getString("start_segment"),obj.getString("end_segment"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static ArrayList<BusLine> fromJsonArray(JSONArray jsonRet) {
+        ArrayList<BusLine> allLines = new ArrayList<BusLine>();
+        for (int i = 0; i < jsonRet.length(); i++) {
+            try {
+                JSONObject obj = jsonRet.getJSONObject(i);
+                BusLine line = fromJson(obj);
+                allLines.add(line);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return allLines;
     }
 
     public String getNumber() {

@@ -11,7 +11,7 @@ import org.json.JSONException;
 import java.util.ArrayList;
 
 
-public class BusLineAsyncTaskTest extends InstrumentationTestCase {
+public class BusLineReadTest extends InstrumentationTestCase {
 
     String jsonString = "[{\n" +
             "    \"name\": \"Centro-CTA\",\n" +
@@ -22,9 +22,8 @@ public class BusLineAsyncTaskTest extends InstrumentationTestCase {
             "}]";
 
     public void testReadBusLines() throws JSONException {
-        BusLinesAsyncTask task = new BusLinesAsyncTask(null);
         JSONArray jsonRet = new JSONArray(jsonString);
-        ArrayList<BusLine> linesArray = task.readBusLines(jsonRet);
+        ArrayList<BusLine> linesArray = BusLine.fromJsonArray(jsonRet);
         BusLine line = linesArray.get(0);
         assertEquals("Centro-CTA", line.getName());
         assertEquals("2324", line.getNumber());

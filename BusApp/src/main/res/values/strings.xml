@@ -2,8 +2,8 @@
 <resources>
 
     <string name="app_name">BusApp</string>
-    <string name="title_section1">Buscar\nÔnibus</string>
-    <string name="title_section2">Buscar\nParadas</string>
+    <string name="title_section1">Escolher\nÔnibus</string>
+    <string name="title_section2">Escolher\nParadas</string>
     <string name="title_section3">Rastrear\nUsuário</string>
     <string name="search_bus_hint">Digite o nº da linha&#8230;</string>
     <string name="search_stop_hint">Digite o nome da parada&#8230;</string>
