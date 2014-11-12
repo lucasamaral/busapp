@@ -41,10 +41,17 @@ public class Stop {
     }
 
     public String stopInfo(){
+        String address;
+        String name;
         if(getAddress().length() > 10)
-            return getName() + " - " + getAddress().substring(0, 15) + "...";
+            address = getAddress().substring(0, 15) + "...";
         else
-            return getName() + " - " + getAddress();
+            address = getAddress();
+        if(getName().length() > 10)
+            name = getName().substring(0, 15) + "...";
+        else
+            name = getName();
+        return name + " - " + address;
     }
 
     public String getAddress() {

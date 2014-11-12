@@ -16,9 +16,8 @@ import java.util.ArrayList;
 
 public class SearchStopFragment extends Fragment {
 
-//    protected ArrayList<String> stops = new ArrayList<String>();
-    private ArrayAdapter<String> adapter;
     private ArrayList<Stop> allStops;
+    private ArrayAdapter<String> adapter;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
