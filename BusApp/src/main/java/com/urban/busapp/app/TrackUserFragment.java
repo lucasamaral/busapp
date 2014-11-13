@@ -47,7 +47,7 @@ import java.util.List;
 import java.util.Locale;
 
 
-public class TrackUserFragment extends Fragment implements
+public class TrackUserFragment extends Activity implements
         GooglePlayServicesClient.ConnectionCallbacks, GooglePlayServicesClient.OnConnectionFailedListener,
         LocationListener {
 
@@ -62,8 +62,6 @@ public class TrackUserFragment extends Fragment implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
     private static final long FASTEST_INTERVAL =
             MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
-
-    private FragmentManager fm;
 
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
@@ -81,10 +79,6 @@ public class TrackUserFragment extends Fragment implements
     private Long startTime;
     private Long timeDiff;
 
-    public void setFm(FragmentManager fm) {
-        this.fm = fm;
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,9 +92,19 @@ public class TrackUserFragment extends Fragment implements
         // Set the fastest update interval to 1 second
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
 
-        mLocationClient = new LocationClient(this.getActivity(), this, this);
+        mLocationClient = new LocationClient(this, this, this);
 
         pointsPath = new ArrayList<LatLng>();
+
+        setContentView(R.layout.fragment_map);
+        locationButton = (Button) findViewById(R.id.mapButton);
+        locationButton.setOnClickListener(new OnClickGetLocation(this));
+        startButton = (Button) findViewById(R.id.startTrack);
+        startButton.setOnClickListener(new OnClickStartTracking());
+        stopButton = (Button) findViewById(R.id.stopTrack);
+        stopButton.setOnClickListener(new OnClickStopTracking());
+        mLatLng = (TextView) findViewById(R.id.lat_lng);
+        setUpMapIfNeeded();
     }
 
     @Override
@@ -118,25 +122,11 @@ public class TrackUserFragment extends Fragment implements
         super.onStop();
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_map, container, false);
-        locationButton = (Button) rootView.findViewById(R.id.mapButton);
-        locationButton.setOnClickListener(new OnClickGetLocation(this.getActivity()));
-        startButton = (Button) rootView.findViewById(R.id.startTrack);
-        startButton.setOnClickListener(new OnClickStartTracking());
-        stopButton = (Button) rootView.findViewById(R.id.stopTrack);
-        stopButton.setOnClickListener(new OnClickStopTracking());
-        mLatLng = (TextView) rootView.findViewById(R.id.lat_lng);
-        setUpMapIfNeeded();
-        return rootView;
-    }
-
     public void setUpMapIfNeeded() {
         if (mMap == null) {
-            mMap = ((MapFragment) fm.findFragmentById(R.id.locationMap)).getMap();
+            mMap = ((MapFragment) getFragmentManager().findFragmentById(R.id.locationMap)).getMap();
             if (mMap == null) {
-                Toast.makeText(this.getActivity(),
+                Toast.makeText(this,
                         "Sorry! unable to create maps", Toast.LENGTH_SHORT)
                         .show();
             } else {
@@ -183,7 +173,7 @@ public class TrackUserFragment extends Fragment implements
 
     private void sendPointsToServer(){
         Geocoder geocoder;
-        geocoder = new Geocoder(this.getActivity(), Locale.getDefault());
+        geocoder = new Geocoder(this, Locale.getDefault());
 
         String fromAddress = "";
         String fromName="";
@@ -233,7 +223,7 @@ public class TrackUserFragment extends Fragment implements
             e.printStackTrace();
         }
         String json = jsonPoints.toString();
-        HttpPostAsyncTask task = new HttpPostAsyncTask(this.getActivity(), json);
+        HttpPostAsyncTask task = new HttpPostAsyncTask(this, json);
         String url = "https://bus-estimates.herokuapp.com/busapp/createsegment/";
         task.execute(url);
     }
@@ -260,12 +250,12 @@ public class TrackUserFragment extends Fragment implements
 
     @Override
     public void onConnected(Bundle bundle) {
-        Toast.makeText(this.getActivity(), "Connected", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onDisconnected() {
-        Toast.makeText(this.getActivity(), "Disconnected. Please re-connect.",
+        Toast.makeText(this, "Disconnected. Please re-connect.",
                 Toast.LENGTH_SHORT).show();
     }
 
@@ -281,7 +271,7 @@ public class TrackUserFragment extends Fragment implements
             try {
                 // Start an Activity that tries to resolve the error
                 connectionResult.startResolutionForResult(
-                        this.getActivity(),
+                        this,
                         CONNECTION_FAILURE_RESOLUTION_REQUEST);
                 /*
                  * Thrown if Google Play services canceled the original
@@ -306,7 +296,7 @@ public class TrackUserFragment extends Fragment implements
         // Get the error dialog from Google Play services
         Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
                 errorCode,
-                this.getActivity(),
+                this,
                 LocationUtils.CONNECTION_FAILURE_RESOLUTION_REQUEST);
 
         // If Google Play services can provide an error dialog
@@ -362,7 +352,7 @@ public class TrackUserFragment extends Fragment implements
         // Check that Google Play services is available
         int resultCode =
                 GooglePlayServicesUtil.
-                        isGooglePlayServicesAvailable(this.getActivity());
+                        isGooglePlayServicesAvailable(this);
         // If Google Play services is available
         if (ConnectionResult.SUCCESS == resultCode) {
             // In debug mode, log the status
@@ -376,7 +366,7 @@ public class TrackUserFragment extends Fragment implements
             // Get the error dialog from Google Play services
             Dialog errorDialog = GooglePlayServicesUtil.getErrorDialog(
                     resultCode,
-                    this.getActivity(),
+                    this,
                     CONNECTION_FAILURE_RESOLUTION_REQUEST);
 
             // If Google Play services can provide an error dialog
