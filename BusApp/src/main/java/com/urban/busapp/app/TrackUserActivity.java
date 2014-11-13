@@ -29,6 +29,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.urban.busapp.app.models.StopPoint;
 import com.urban.busapp.app.tasks.HttpPostAsyncTask;
 
 import org.json.JSONArray;
@@ -67,6 +68,7 @@ public class TrackUserActivity extends Activity implements
     private GoogleMap mMap;
     private List<LatLng> pointsPath;
     private Polyline polyline;
+    private ArrayList<StopPoint> stopPoints;
 
     private TextView mLatLng;
     private Button locationButton;
@@ -80,17 +82,15 @@ public class TrackUserActivity extends Activity implements
         super.onCreate(savedInstanceState);
 
         mLocationRequest = LocationRequest.create();
-        // Use high accuracy
         mLocationRequest.setPriority(
                 LocationRequest.PRIORITY_HIGH_ACCURACY);
-        // Set the update interval to 5 seconds
         mLocationRequest.setInterval(UPDATE_INTERVAL);
-        // Set the fastest update interval to 1 second
         mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
-
         mLocationClient = new LocationClient(this, this, this);
 
         pointsPath = new ArrayList<LatLng>();
+        Intent intent = getIntent();
+        stopPoints = intent.getParcelableArrayListExtra("points");
 
         setContentView(R.layout.map_activity);
         locationButton = (Button) findViewById(R.id.mapButton);
