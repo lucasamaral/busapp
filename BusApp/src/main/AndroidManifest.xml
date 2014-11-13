@@ -29,6 +29,13 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".TrackUserActivity"
+            android:label="@string/title_section3">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity"/>
+        </activity>
+
         <meta-data android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyCUL1x0xtLoRIY5Qm7O_d4R_aMG9BNHsEM"/>
     </application>
