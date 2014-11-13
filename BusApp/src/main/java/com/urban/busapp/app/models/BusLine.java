@@ -1,6 +1,8 @@
 package com.urban.busapp.app.models;
 
 
+import com.google.android.gms.maps.model.LatLng;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,23 +14,43 @@ public class BusLine{
     private String name;
     private String start;
     private String end;
+    private ArrayList<StopPoint> stopPoints;
 
-
-    public BusLine(String number, String name, String start, String end) {
+    public BusLine(String number, String name, String start, String end, ArrayList<StopPoint> stopPoints) {
         this.number = number;
         this.name = name;
         this.start = start;
         this.end = end;
+        this.stopPoints = stopPoints;
     }
 
     public static BusLine fromJson(JSONObject obj){
         try {
              return new BusLine(obj.getString("number"),obj.getString("name"),
-                    obj.getString("start_segment"),obj.getString("end_segment"));
+                    obj.getString("start_segment"),obj.getString("end_segment"),
+                     parsePoints(obj.getJSONArray("stop_points")));
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static ArrayList<StopPoint> parsePoints(JSONArray stopPoints) {
+        ArrayList<StopPoint> parsedPoints = new ArrayList<StopPoint>();
+        for (int i = 0; i < stopPoints.length(); i++) {
+            try {
+                JSONObject obj = stopPoints.getJSONObject(i);
+                String pointStr = obj.getString("point");
+                String[] values = pointStr.split(" ");
+                Double lat = Double.parseDouble(values[0].split(":")[1]);
+                Double lng = Double.parseDouble(values[1].split(":")[1]);
+                LatLng point = new LatLng(lat, lng);
+                parsedPoints.add(new StopPoint(point, obj.getInt("seg_id")));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return parsedPoints;
     }
 
     public static ArrayList<BusLine> fromJsonArray(JSONArray jsonRet) {
@@ -59,6 +81,10 @@ public class BusLine{
 
     public String getEnd() {
         return end;
+    }
+
+    public ArrayList<StopPoint> getStopPoints() {
+        return stopPoints;
     }
 
     public String lineInfo(){
