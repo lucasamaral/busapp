@@ -15,24 +15,41 @@ public class BusLine{
     private String start;
     private String end;
     private ArrayList<StopPoint> stopPoints;
+    private ArrayList<SegmentTime> segmentTimes;
 
-    public BusLine(String number, String name, String start, String end, ArrayList<StopPoint> stopPoints) {
+    public BusLine(String number, String name, String start, String end,
+                   ArrayList<StopPoint> stopPoints, ArrayList<SegmentTime> segmentTimes) {
         this.number = number;
         this.name = name;
         this.start = start;
         this.end = end;
         this.stopPoints = stopPoints;
+        this.segmentTimes = segmentTimes;
     }
 
     public static BusLine fromJson(JSONObject obj){
         try {
              return new BusLine(obj.getString("number"),obj.getString("name"),
                     obj.getString("start_segment"),obj.getString("end_segment"),
-                     parsePoints(obj.getJSONArray("stop_points")));
+                     parsePoints(obj.getJSONArray("stop_points")),
+                     parseSegments(obj.getJSONArray("segs_ordered")));
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static ArrayList<SegmentTime> parseSegments(JSONArray segments) {
+        ArrayList<SegmentTime> parsedSegs = new ArrayList<SegmentTime>();
+        for (int i = 0; i < segments.length(); i++) {
+            try {
+                JSONObject obj = segments.getJSONObject(i);
+                parsedSegs.add(new SegmentTime(obj.getInt("time_estimated")));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return parsedSegs;
     }
 
     private static ArrayList<StopPoint> parsePoints(JSONArray stopPoints) {
@@ -85,6 +102,10 @@ public class BusLine{
 
     public ArrayList<StopPoint> getStopPoints() {
         return stopPoints;
+    }
+
+    public ArrayList<SegmentTime> getSegmentTimes() {
+        return segmentTimes;
     }
 
     public String lineInfo(){

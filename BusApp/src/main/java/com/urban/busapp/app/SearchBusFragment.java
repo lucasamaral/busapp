@@ -35,8 +35,9 @@ public class SearchBusFragment extends Fragment {
                                     int position, long id) {
                 Intent intent = new Intent(getActivity(), TrackUserActivity.class);
                 intent.putParcelableArrayListExtra("points", allLines.get(position).getStopPoints());
+                intent.putParcelableArrayListExtra(
+                        "estimations", allLines.get(position).getSegmentTimes());
                 startActivity(intent);
-
             }
         });
         BusLinesAsyncTask task = new BusLinesAsyncTask(this);

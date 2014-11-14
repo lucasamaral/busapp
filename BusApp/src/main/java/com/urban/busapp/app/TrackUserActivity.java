@@ -29,6 +29,7 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.urban.busapp.app.models.SegmentTime;
 import com.urban.busapp.app.models.StopPoint;
 import com.urban.busapp.app.models.TimeMeasure;
 import com.urban.busapp.app.tasks.HttpPostAsyncTask;
@@ -75,8 +76,9 @@ public class TrackUserActivity extends Activity implements
     private ArrayList<StopPoint> stopPointsUseful;
     private boolean started;
     private ArrayList<TimeMeasure> times;
+    private ArrayList<SegmentTime> estimations;
 
-    private TextView mLatLng;
+    private TextView mTime;
     private Button locationButton;
     private Button startButton;
     private Button stopButton;
@@ -99,6 +101,10 @@ public class TrackUserActivity extends Activity implements
         stopPointsUseful = new ArrayList<StopPoint>();
         Intent intent = getIntent();
         allStopPoints = intent.getParcelableArrayListExtra("points");
+        estimations = intent.getParcelableArrayListExtra("estimations");
+        for(SegmentTime time : estimations){
+            System.out.println(time);
+        }
         started = false;
 
         setContentView(R.layout.map_activity);
@@ -108,7 +114,7 @@ public class TrackUserActivity extends Activity implements
         startButton.setOnClickListener(new OnClickStartTracking());
         stopButton = (Button) findViewById(R.id.stopTrack);
         stopButton.setOnClickListener(new OnClickStopTracking());
-        mLatLng = (TextView) findViewById(R.id.lat_lng);
+        mTime = (TextView) findViewById(R.id.time);
         setUpMapIfNeeded();
     }
 
@@ -477,18 +483,58 @@ public class TrackUserActivity extends Activity implements
 
         @Override
         public void onClick(View v) {
-            // If Google Play Services is available
             if (servicesConnected()) {
-
-                // Get the current location
                 Location currentLocation = mLocationClient.getLastLocation();
                 mCurrentLocation = currentLocation;
 
-                // Display the current location in the UI
-                mLatLng.setText(LocationUtils.getLatLng(trackFragActivity, currentLocation));
+                ArrayList<Integer> prevTimes = findPreviousTimes(currentLocation);
+                if(prevTimes.size()>0 && prevTimes.indexOf(0)==-1){
+                    Integer sum = 0;
+                    for(Integer time : prevTimes){
+                        sum += time;
+                    }
+                    Integer minutes = sum/60;
+                    Integer seconds = sum - minutes*60;
+                    String text = "";
+                    if(minutes > 0 && seconds > 0){
+                        text = String.format("%d min %ds", minutes, seconds);
+                    } else if (minutes > 0) {
+                        text = String.format("%d min", minutes);
+                    } else {
+                        text = String.format("%d s", seconds);
+                    }
+                    mTime.setText(text);
+                } else {
+                    mTime.setText("Desconhecido");
+                }
                 Toast.makeText(trackFragActivity, LocationUtils.getLatLng(trackFragActivity, currentLocation),
                         Toast.LENGTH_SHORT).show();
             }
+        }
+
+        private ArrayList<Integer> findPreviousTimes(Location currentLocation) {
+            ArrayList<Integer> timesSegs = new ArrayList<Integer>();
+            Integer count = 0;
+            boolean found = false;
+            for(StopPoint pt : allStopPoints){
+                Location other = new Location("other");
+                other.setLatitude(pt.getPoint().latitude);
+                other.setLongitude(pt.getPoint().longitude);
+                Float distance = currentLocation.distanceTo(other);
+                System.out.println("Distance(" + count.toString() + "): " + distance.toString());
+                if(distance < DISTANCE_THRESHOLD){
+                    found = true;
+                    break;
+                }
+                ++count;
+            }
+            if(found){
+                Toast.makeText(trackFragActivity, "Found stop: " + count.toString(), Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < count; i++){
+                    timesSegs.add(estimations.get(i).getTimeEstimated());
+                }
+            }
+            return timesSegs;
         }
     }
 
