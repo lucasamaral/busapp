@@ -33,9 +33,6 @@ public class SearchBusFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
-                Toast.makeText(getActivity(),
-                        "Click ListItem Number " + position, Toast.LENGTH_LONG)
-                        .show();
                 Intent intent = new Intent(getActivity(), TrackUserActivity.class);
                 intent.putParcelableArrayListExtra("points", allLines.get(position).getStopPoints());
                 startActivity(intent);

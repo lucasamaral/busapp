@@ -75,7 +75,7 @@ public class TrackUserActivity extends Activity implements
     private ArrayList<StopPoint> stopPointsUseful;
     private boolean started;
     private ArrayList<TimeMeasure> times;
-    
+
     private TextView mLatLng;
     private Button locationButton;
     private Button startButton;
