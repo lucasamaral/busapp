@@ -26,19 +26,23 @@ public class TimeMeasure {
 
     public static JSONObject toJson(TimeMeasure time){
         JSONObject object = new JSONObject();
-        try {
-            object.put("line_segment", time.getLineSegment());
-            object.put("time_value", time.getTimeValue());
-        } catch (JSONException e) {
-            e.printStackTrace();
+        if(time != null){
+            try {
+                object.put("time_value", time.getTimeValue());
+                object.put("line_segment", time.getLineSegment());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         return object;
     }
 
     public static JSONArray toJsonArray(ArrayList<TimeMeasure> times){
         JSONArray array = new JSONArray();
-        for(TimeMeasure time : times){
-            array.put(toJson(time));
+        if(times != null && times.size()>0){
+            for(TimeMeasure time : times){
+                array.put(toJson(time));
+            }
         }
         return array;
     }

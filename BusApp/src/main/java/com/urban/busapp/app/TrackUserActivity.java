@@ -60,6 +60,7 @@ public class TrackUserActivity extends Activity implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
     private static final long FASTEST_INTERVAL =
             MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
+    public static final float DISTANCE_THRESHOLD = 12f;
 
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
@@ -92,6 +93,7 @@ public class TrackUserActivity extends Activity implements
         mLocationClient = new LocationClient(this, this, this);
 
         pointsPath = new ArrayList<LatLng>();
+        times = new ArrayList<TimeMeasure>();
         Intent intent = getIntent();
         allStopPoints = intent.getParcelableArrayListExtra("points");
 
@@ -164,7 +166,22 @@ public class TrackUserActivity extends Activity implements
     }
 
     private void checkIsClose(Location currentLocation) {
-
+        Location stop = new Location("stop");
+        stop.setLatitude(stopPointsUseful.get(0).getPoint().latitude);
+        stop.setLongitude(stopPointsUseful.get(0).getPoint().longitude);
+        float distance = currentLocation.distanceTo(stop);
+        if(distance < DISTANCE_THRESHOLD){
+            StopPoint stopPoint = stopPointsUseful.remove(0);
+            Long timeNow = System.nanoTime();
+            if(startTime != null){
+                timeDiff = timeNow - startTime;
+                startTime = timeNow;
+            }
+            Toast.makeText(this, "Time: " + timeDiff, Toast.LENGTH_SHORT);
+            TimeMeasure measure = new TimeMeasure(
+                    stopPoint.getSegId().longValue(), timeDiff.intValue());
+            times.add(measure);
+        }
     }
 
     private void initializeStopPoints(Location currentLocation) {
@@ -174,7 +191,7 @@ public class TrackUserActivity extends Activity implements
             other.setLatitude(pt.getPoint().latitude);
             other.setLongitude(pt.getPoint().longitude);
             float distance = currentLocation.distanceTo(other);
-            if(distance < 12f)
+            if(distance < DISTANCE_THRESHOLD)
                 break;
             ++count;
         }
@@ -190,6 +207,13 @@ public class TrackUserActivity extends Activity implements
         if(startTime != null)
             timeDiff = System.nanoTime() - startTime;
         mLocationClient.removeLocationUpdates(this);
+    }
+
+    private void sendMeasuresToServer(){
+        String json = TimeMeasure.toJsonArray(times).toString();
+        HttpPostAsyncTask task = new HttpPostAsyncTask(this, json);
+        String url = "https://bus-estimates.herokuapp.com/busapp/times/";
+        task.execute(url);
     }
 
     private void sendPointsToServer(){
@@ -461,7 +485,8 @@ public class TrackUserActivity extends Activity implements
         public void onClick(View v) {
             if (servicesConnected()) {
                 stopPeriodicUpdates();
-                sendPointsToServer();
+//                sendPointsToServer();
+                sendMeasuresToServer();
             }
         }
     }
