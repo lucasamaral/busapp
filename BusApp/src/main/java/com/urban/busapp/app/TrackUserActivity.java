@@ -60,7 +60,8 @@ public class TrackUserActivity extends Activity implements
     private static final int FASTEST_INTERVAL_IN_SECONDS = 1;
     private static final long FASTEST_INTERVAL =
             MILLISECONDS_PER_SECOND * FASTEST_INTERVAL_IN_SECONDS;
-    public static final float DISTANCE_THRESHOLD = 12f;
+    public static final float DISTANCE_THRESHOLD = 30f;
+    public static final float DISTANCE_RESET_THRESHOLD = 20f;
 
     private LocationClient mLocationClient;
     private LocationRequest mLocationRequest;
@@ -72,8 +73,9 @@ public class TrackUserActivity extends Activity implements
     private Polyline polyline;
     private ArrayList<StopPoint> allStopPoints;
     private ArrayList<StopPoint> stopPointsUseful;
+    private boolean started;
     private ArrayList<TimeMeasure> times;
-
+    
     private TextView mLatLng;
     private Button locationButton;
     private Button startButton;
@@ -94,8 +96,10 @@ public class TrackUserActivity extends Activity implements
 
         pointsPath = new ArrayList<LatLng>();
         times = new ArrayList<TimeMeasure>();
+        stopPointsUseful = new ArrayList<StopPoint>();
         Intent intent = getIntent();
         allStopPoints = intent.getParcelableArrayListExtra("points");
+        started = false;
 
         setContentView(R.layout.map_activity);
         locationButton = (Button) findViewById(R.id.mapButton);
@@ -158,6 +162,8 @@ public class TrackUserActivity extends Activity implements
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
             if(firstTime){
                 mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+            }
+            if(!started){
                 initializeStopPoints(mCurrentLocation);
             } else {
                 checkIsClose(mCurrentLocation);
@@ -166,36 +172,48 @@ public class TrackUserActivity extends Activity implements
     }
 
     private void checkIsClose(Location currentLocation) {
-        Location stop = new Location("stop");
-        stop.setLatitude(stopPointsUseful.get(0).getPoint().latitude);
-        stop.setLongitude(stopPointsUseful.get(0).getPoint().longitude);
-        float distance = currentLocation.distanceTo(stop);
-        if(distance < DISTANCE_THRESHOLD){
-            StopPoint stopPoint = stopPointsUseful.remove(0);
-            Long timeNow = System.nanoTime();
-            if(startTime != null){
-                timeDiff = timeNow - startTime;
-                startTime = timeNow;
+        if(stopPointsUseful.size() > 0){
+            Location stop = new Location("stop");
+            stop.setLatitude(stopPointsUseful.get(0).getPoint().latitude);
+            stop.setLongitude(stopPointsUseful.get(0).getPoint().longitude);
+            Float distance = currentLocation.distanceTo(stop);
+            System.out.println("DistanceUntil: " + distance.toString());
+            if(distance < DISTANCE_RESET_THRESHOLD){
+                StopPoint stopPoint = stopPointsUseful.remove(0);
+                Long timeNow = System.nanoTime();
+                if(startTime != null){
+                    timeDiff = timeNow - startTime;
+                    startTime = timeNow;
+                }
+                Long timeSeconds = timeDiff/NANOSECONDS_PER_SECOND;
+                Toast.makeText(this, "Time: " + timeSeconds.toString(), Toast.LENGTH_SHORT).show();
+                TimeMeasure measure = new TimeMeasure(
+                        stopPoint.getSegId().longValue(), timeSeconds.intValue());
+                times.add(measure);
             }
-            Toast.makeText(this, "Time: " + timeDiff, Toast.LENGTH_SHORT);
-            TimeMeasure measure = new TimeMeasure(
-                    stopPoint.getSegId().longValue(), timeDiff.intValue());
-            times.add(measure);
         }
     }
 
     private void initializeStopPoints(Location currentLocation) {
-        int count = 0;
+        Integer count = 0;
+        boolean found = false;
         for(StopPoint pt : allStopPoints){
             Location other = new Location("other");
             other.setLatitude(pt.getPoint().latitude);
             other.setLongitude(pt.getPoint().longitude);
-            float distance = currentLocation.distanceTo(other);
-            if(distance < DISTANCE_THRESHOLD)
+            Float distance = currentLocation.distanceTo(other);
+            System.out.println("Distance(" + count.toString() + "): " + distance.toString());
+            if(distance < DISTANCE_THRESHOLD){
+                found = true;
                 break;
+            }
             ++count;
         }
-        stopPointsUseful = new ArrayList<StopPoint>(allStopPoints.subList(count+1, allStopPoints.size()));
+        if(found){
+            Toast.makeText(this, "Found stop: " + count.toString(), Toast.LENGTH_SHORT).show();
+            started = true;
+            stopPointsUseful = new ArrayList<StopPoint>(allStopPoints.subList(count+1, allStopPoints.size()));
+        }
     }
 
     private void startPeriodicUpdates() {
@@ -211,8 +229,9 @@ public class TrackUserActivity extends Activity implements
 
     private void sendMeasuresToServer(){
         String json = TimeMeasure.toJsonArray(times).toString();
+        System.out.println("Data:\n" + json + "\n");
         HttpPostAsyncTask task = new HttpPostAsyncTask(this, json);
-        String url = "https://bus-estimates.herokuapp.com/busapp/times/";
+        String url = "https://bus-estimates.herokuapp.com/busapp/createmeasures/";
         task.execute(url);
     }
 
