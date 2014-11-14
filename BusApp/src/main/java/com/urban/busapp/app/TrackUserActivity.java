@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.urban.busapp.app.models.StopPoint;
+import com.urban.busapp.app.models.TimeMeasure;
 import com.urban.busapp.app.tasks.HttpPostAsyncTask;
 
 import org.json.JSONArray;
@@ -68,7 +69,9 @@ public class TrackUserActivity extends Activity implements
     private GoogleMap mMap;
     private List<LatLng> pointsPath;
     private Polyline polyline;
-    private ArrayList<StopPoint> stopPoints;
+    private ArrayList<StopPoint> allStopPoints;
+    private ArrayList<StopPoint> stopPointsUseful;
+    private ArrayList<TimeMeasure> times;
 
     private TextView mLatLng;
     private Button locationButton;
@@ -90,7 +93,7 @@ public class TrackUserActivity extends Activity implements
 
         pointsPath = new ArrayList<LatLng>();
         Intent intent = getIntent();
-        stopPoints = intent.getParcelableArrayListExtra("points");
+        allStopPoints = intent.getParcelableArrayListExtra("points");
 
         setContentView(R.layout.map_activity);
         locationButton = (Button) findViewById(R.id.mapButton);
@@ -143,6 +146,7 @@ public class TrackUserActivity extends Activity implements
             firstTime = true;
 
         mCurrentLocation = location;
+
         if(mCurrentLocation != null && mMap != null){
             LatLng latLng = new LatLng(mCurrentLocation.getLatitude(), mCurrentLocation.getLongitude());
             pointsPath.add(latLng);
@@ -152,8 +156,29 @@ public class TrackUserActivity extends Activity implements
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
             if(firstTime){
                 mMap.animateCamera(CameraUpdateFactory.zoomTo(16.0f));
+                initializeStopPoints(mCurrentLocation);
+            } else {
+                checkIsClose(mCurrentLocation);
             }
         }
+    }
+
+    private void checkIsClose(Location currentLocation) {
+
+    }
+
+    private void initializeStopPoints(Location currentLocation) {
+        int count = 0;
+        for(StopPoint pt : allStopPoints){
+            Location other = new Location("other");
+            other.setLatitude(pt.getPoint().latitude);
+            other.setLongitude(pt.getPoint().longitude);
+            float distance = currentLocation.distanceTo(other);
+            if(distance < 12f)
+                break;
+            ++count;
+        }
+        stopPointsUseful = new ArrayList<StopPoint>(allStopPoints.subList(count+1, allStopPoints.size()));
     }
 
     private void startPeriodicUpdates() {
